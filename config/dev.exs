@@ -1,4 +1,5 @@
 import Config
+config :ash, policies: [show_policy_breakdowns?: true]
 
 # Configure your database
 config :poe_profit, PoeProfit.Repo,
@@ -6,6 +7,7 @@ config :poe_profit, PoeProfit.Repo,
   password: "postgres",
   hostname: "localhost",
   database: "poe_profit_dev",
+  port: "5435",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
@@ -19,7 +21,7 @@ config :poe_profit, PoeProfit.Repo,
 config :poe_profit, PoeProfitWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
-  http: [ip: {127, 0, 0, 1}, port: String.to_integer(System.get_env("PORT") || "4000")],
+  http: [ip: {127, 0, 0, 1}, port: String.to_integer(System.get_env("PORT") || "4100")],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
@@ -64,7 +66,7 @@ config :poe_profit, PoeProfitWeb.Endpoint,
   ]
 
 # Enable dev routes for dashboard and mailbox
-config :poe_profit, dev_routes: true
+config :poe_profit, dev_routes: true, token_signing_secret: "xU2H9SEKxzJgpCQb9CU7dYL3TB8CRJBl"
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :default_formatter, format: "[$level] $message\n"

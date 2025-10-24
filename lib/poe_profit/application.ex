@@ -11,11 +11,17 @@ defmodule PoeProfit.Application do
       PoeProfitWeb.Telemetry,
       PoeProfit.Repo,
       {DNSCluster, query: Application.get_env(:poe_profit, :dns_cluster_query) || :ignore},
+      {Oban,
+       AshOban.config(
+         Application.fetch_env!(:poe_profit, :ash_domains),
+         Application.fetch_env!(:poe_profit, Oban)
+       )},
       {Phoenix.PubSub, name: PoeProfit.PubSub},
       # Start a worker by calling: PoeProfit.Worker.start_link(arg)
       # {PoeProfit.Worker, arg},
       # Start to serve requests, typically the last entry
-      PoeProfitWeb.Endpoint
+      PoeProfitWeb.Endpoint,
+      {AshAuthentication.Supervisor, [otp_app: :poe_profit]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

@@ -1,4 +1,8 @@
 import Config
+config :poe_profit, Oban, testing: :manual
+config :poe_profit, token_signing_secret: "aKWyX2R0A3TCv0lz61aq6J/BqbQjF9wS"
+config :bcrypt_elixir, log_rounds: 1
+config :ash, policies: [show_policy_breakdowns?: true], disable_async?: true
 
 # Configure your database
 #
