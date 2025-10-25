@@ -36,13 +36,13 @@ defmodule PoeProfitWeb.Router do
       #
       # If an authenticated user must *not* be present:
       # on_mount {PoeProfitWeb.LiveUserAuth, :live_no_user}
+
+      live "/", HomeLive
     end
   end
 
   scope "/", PoeProfitWeb do
     pipe_through :browser
-
-    get "/", PageController, :home
     auth_routes AuthController, PoeProfit.Accounts.User, path: "/auth"
     sign_out_route AuthController
 
