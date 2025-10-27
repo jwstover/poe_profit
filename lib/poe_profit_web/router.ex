@@ -38,6 +38,7 @@ defmodule PoeProfitWeb.Router do
       # on_mount {PoeProfitWeb.LiveUserAuth, :live_no_user}
 
       live "/", HomeLive
+      live "/items", ItemsLive
     end
   end
 
