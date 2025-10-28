@@ -150,7 +150,7 @@ defmodule PoeProfitWeb.CoreComponents do
   attr :type, :string,
     default: "text",
     values: ~w(checkbox color date datetime-local email file month number password
-               search select tel text textarea time url week)
+               search select tel text textarea time type_ahead_select url week)
 
   attr :field, Phoenix.HTML.FormField,
     doc: "a form field struct retrieved from the form, for example: @form[:email]"
@@ -246,6 +246,89 @@ defmodule PoeProfitWeb.CoreComponents do
     """
   end
 
+  def input(%{type: "type_ahead_select"} = assigns) do
+    # Set default value if not provided
+    assigns = assign_new(assigns, :value, fn -> nil end)
+
+    # Find the selected option label from the options list
+    selected_label =
+      case Enum.find(assigns.options, fn opt -> selected_option?(opt, assigns.value) end) do
+        {label, _value} -> label
+        nil -> assigns.prompt || "Select..."
+      end
+
+    assigns = assign(assigns, :selected_label, selected_label)
+
+    ~H"""
+    <div class="fieldset mb-2">
+      <label>
+        <span :if={@label} class="label mb-1">{@label}</span>
+        <div
+          id={"#{@id}-container"}
+          phx-hook="TypeAheadSelect"
+          class="relative"
+        >
+          <!-- Hidden input that holds the actual form value -->
+          <input
+            type="hidden"
+            id={@id}
+            name={@name}
+            value={@value}
+            data-hidden-input
+          />
+
+          <!-- Display button that shows the selected value -->
+          <button
+            type="button"
+            data-display-button
+            class={[
+              "w-full input flex items-center justify-between",
+              @errors != [] && (@error_class || "input-error")
+            ]}
+          >
+            <span data-display-text class="flex-1 text-left">
+              {@selected_label}
+            </span>
+            <.icon name="hero-chevron-down" class="size-4 ml-2" />
+          </button>
+
+          <!-- Dropdown container (hidden by default) -->
+          <div
+            data-dropdown
+            class="hidden absolute z-10 w-full mt-1 bg-base-100 border border-base-300 rounded-lg shadow-lg"
+          >
+            <!-- Search input -->
+            <div class="p-2">
+              <input
+                type="text"
+                data-search-input
+                placeholder="Search..."
+                class="w-full input input-sm"
+              />
+            </div>
+
+            <!-- Options list -->
+            <ul
+              data-options-list
+              class="max-h-60 overflow-y-auto"
+            >
+              <li
+                :for={{label, value} <- @options}
+                data-option
+                data-value={value}
+                class="px-4 py-2 hover:bg-base-200 cursor-pointer"
+              >
+                {label}
+              </li>
+            </ul>
+          </div>
+        </div>
+      </label>
+      <.error :for={msg <- @errors}>{msg}</.error>
+    </div>
+    """
+  end
+
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
@@ -277,6 +360,13 @@ defmodule PoeProfitWeb.CoreComponents do
       {render_slot(@inner_block)}
     </p>
     """
+  end
+
+  # Helper to check if an option is selected in type_ahead_select
+  defp selected_option?(_option, nil), do: false
+  defp selected_option?({_label, nil}, _value), do: false
+  defp selected_option?({_label, option_value}, value) do
+    to_string(option_value) == to_string(value)
   end
 
   @doc """

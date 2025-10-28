@@ -1,5 +1,6 @@
 defmodule PoeProfitWeb.FiltersComponent do
   use Phoenix.Component
+  import PoeProfitWeb.CoreComponents, only: [input: 1]
 
   @doc """
   Renders a dynamic filter form based on API response structure.
@@ -52,38 +53,35 @@ defmodule PoeProfitWeb.FiltersComponent do
   # Pattern match: combined minMax with option dropdown (e.g., price with currency selection)
   defp filter_input(assigns)
        when is_map_key(assigns.filter, "minMax") and is_map_key(assigns.filter, "option") do
-    options = get_in(assigns.filter, ["option", "options"]) || []
+    raw_options = get_in(assigns.filter, ["option", "options"]) || []
+    # Convert API options to {label, value} tuples, filtering out disabled string headers
+    options = transform_options(raw_options)
     assigns = assign(assigns, :options, options)
 
     ~H"""
-    <div class={["grid grid-cols-[1fr_auto_75px_75px] gap-1", filter_class(@filter)]}>
-      <label class="block font-medium mb-1">
-        {@filter["text"] || humanize(@filter["id"])}
-      </label>
-      <select
-        name={build_input_name(@group_id, @filter["id"], "option")}
-        class="py-1 px-2 bg-base-300"
-      >
-        <%= for opt <- @options do %>
-          <%= if is_binary(opt) do %>
-            <option disabled class="text-gray-400">{opt}</option>
-          <% else %>
-            <option value={opt["id"]}>{opt["text"]}</option>
-          <% end %>
-        <% end %>
-      </select>
-      <input
-        type="number"
-        name={build_input_name(@group_id, @filter["id"], "min")}
-        placeholder="Min"
-        class="py-1 px-2 bg-base-300"
-      />
-      <input
-        type="number"
-        name={build_input_name(@group_id, @filter["id"], "max")}
-        placeholder="Max"
-        class="py-1 px-2 bg-base-300"
-      />
+    <div class={filter_class(@filter)}>
+      <div class="grid grid-cols-[1fr_75px_75px] gap-2 items-end">
+        <.input
+          type="type_ahead_select"
+          id={build_input_id(@group_id, @filter["id"])}
+          name={build_input_name(@group_id, @filter["id"], "option")}
+          label={@filter["text"] || humanize(@filter["id"])}
+          options={@options}
+          prompt="Select..."
+        />
+        <input
+          type="number"
+          name={build_input_name(@group_id, @filter["id"], "min")}
+          placeholder="Min"
+          class="py-1 px-2 bg-base-300"
+        />
+        <input
+          type="number"
+          name={build_input_name(@group_id, @filter["id"], "max")}
+          placeholder="Max"
+          class="py-1 px-2 bg-base-300"
+        />
+      </div>
     </div>
     """
   end
@@ -115,26 +113,21 @@ defmodule PoeProfitWeb.FiltersComponent do
 
   # Pattern match: select dropdown with options only
   defp filter_input(assigns) when is_map_key(assigns.filter, "option") do
-    options = get_in(assigns.filter, ["option", "options"]) || []
+    raw_options = get_in(assigns.filter, ["option", "options"]) || []
+    # Convert API options to {label, value} tuples, filtering out disabled string headers
+    options = transform_options(raw_options)
     assigns = assign(assigns, :options, options)
 
     ~H"""
-    <div class={["grid grid-cols-2", filter_class(@filter)]}>
-      <label class="block text-sm font-medium mb-1">
-        {@filter["text"] || humanize(@filter["id"])}
-      </label>
-      <select
+    <div class={filter_class(@filter)}>
+      <.input
+        type="type_ahead_select"
+        id={build_input_id(@group_id, @filter["id"])}
         name={build_input_name(@group_id, @filter["id"], "option")}
-        class="py-1 px-2 bg-base-300"
-      >
-        <%= for opt <- @options do %>
-          <%= if is_binary(opt) do %>
-            <option disabled class="text-gray-400">{opt}</option>
-          <% else %>
-            <option value={opt["id"]}>{opt["text"]}</option>
-          <% end %>
-        <% end %>
-      </select>
+        label={@filter["text"] || humanize(@filter["id"])}
+        options={@options}
+        prompt="Select..."
+      />
     </div>
     """
   end
@@ -158,6 +151,19 @@ defmodule PoeProfitWeb.FiltersComponent do
   # Builds nested input name: filters[group_id][filters][filter_id][key]
   defp build_input_name(group_id, filter_id, key) do
     "filters[#{group_id}][filters][#{filter_id}][#{key}]"
+  end
+
+  # Builds unique input ID for filter
+  defp build_input_id(group_id, filter_id) do
+    "filter-#{group_id}-#{filter_id}"
+  end
+
+  # Transforms API options format to {label, value} tuples for type_ahead_select
+  # Filters out disabled string options (category headers)
+  defp transform_options(options) do
+    options
+    |> Enum.reject(&is_binary/1)
+    |> Enum.map(fn opt -> {opt["text"], opt["id"]} end)
   end
 
   # Determines CSS class based on fullSpan property

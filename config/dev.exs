@@ -21,7 +21,7 @@ config :poe_profit, PoeProfit.Repo,
 config :poe_profit, PoeProfitWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
-  http: [ip: {127, 0, 0, 1}, port: String.to_integer(System.get_env("PORT") || "4100")],
+  http: [ip: {127, 0, 0, 1}, port: String.to_integer(System.get_env("PORT") || "4150")],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
@@ -30,6 +30,9 @@ config :poe_profit, PoeProfitWeb.Endpoint,
     esbuild: {Esbuild, :install_and_run, [:poe_profit, ~w(--sourcemap=inline --watch)]},
     tailwind: {Tailwind, :install_and_run, [:poe_profit, ~w(--watch)]}
   ]
+
+config :live_debugger,
+  port: 4107
 
 # ## SSL Support
 #
