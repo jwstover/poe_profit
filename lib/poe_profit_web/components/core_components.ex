@@ -254,7 +254,7 @@ defmodule PoeProfitWeb.CoreComponents do
     selected_label =
       case Enum.find(assigns.options, fn opt -> selected_option?(opt, assigns.value) end) do
         {label, _value} -> label
-        nil -> assigns.prompt || "Select..."
+        nil -> assigns.prompt || (assigns.options |> hd() |> elem(0))
       end
 
     assigns = assign(assigns, :selected_label, selected_label)

@@ -47,6 +47,7 @@ defmodule PoeProfitWeb.FilterParamsHelper do
   defp is_empty?("Any"), do: true
   defp is_empty?("Any Time"), do: true
   defp is_empty?("Exalted Orb Equivalent"), do: true
+  defp is_empty?("undefined"), do: true
   defp is_empty?(nil), do: true
   defp is_empty?(""), do: true
   defp is_empty?(map) when is_map(map), do: map_size(map) == 0

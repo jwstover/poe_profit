@@ -10,15 +10,16 @@ defmodule PoeProfitWeb.FiltersComponent do
 
   ## Examples
 
-      <.filters filters_data={@filters_config} />
+      <.filters filters_data={@filters_config} form={@form} />
   """
   attr :filters_data, :map, required: true
+  attr :form, Phoenix.HTML.Form, required: true
 
   def filters(assigns) do
     ~H"""
     <div class="filters-container w-full flex flex-col gap-2">
       <%= for group <- Map.get(@filters_data, "result", []) do %>
-        <.filter_group group={group} />
+        <.filter_group group={group} form={@form} />
       <% end %>
     </div>
     """
@@ -31,7 +32,12 @@ defmodule PoeProfitWeb.FiltersComponent do
     <div class="card w-full bg-base-200">
       <div class="card-body p-0">
         <div class={"collapse collapse-arrow bg-base-200 #{if !@group["hidden"], do: "collapse-open"}"}>
-          <input type="checkbox" checked={!@group["hidden"]} />
+          <input
+            type="checkbox"
+            checked={!@group["hidden"]}
+            phx-update="ignore"
+            id={"collapse-#{@group["id"]}"}
+          />
           <div class="collapse-title text-lg font-semibold">
             {@group["title"] || humanize(@group["id"])}
           </div>
@@ -39,7 +45,7 @@ defmodule PoeProfitWeb.FiltersComponent do
             <fieldset class="filter-group w-full" id={@group["id"]}>
               <div class="grid grid-cols-2 gap-x-2 pt-2">
                 <%= for filter <- Map.get(@group, "filters", []) do %>
-                  <.filter_input filter={filter} group_id={@group["id"]} />
+                  <.filter_input filter={filter} group_id={@group["id"]} form={@form} />
                 <% end %>
               </div>
             </fieldset>
@@ -56,7 +62,13 @@ defmodule PoeProfitWeb.FiltersComponent do
     raw_options = get_in(assigns.filter, ["option", "options"]) || []
     # Convert API options to {label, value} tuples, filtering out disabled string headers
     options = transform_options(raw_options)
-    assigns = assign(assigns, :options, options)
+
+    assigns =
+      assigns
+      |> assign(:options, options)
+      |> assign(:option_value, get_filter_value(assigns.form, assigns.group_id, assigns.filter["id"], "option"))
+      |> assign(:min_value, get_filter_value(assigns.form, assigns.group_id, assigns.filter["id"], "min"))
+      |> assign(:max_value, get_filter_value(assigns.form, assigns.group_id, assigns.filter["id"], "max"))
 
     ~H"""
     <div class={filter_class(@filter)}>
@@ -67,17 +79,20 @@ defmodule PoeProfitWeb.FiltersComponent do
           name={build_input_name(@group_id, @filter["id"], "option")}
           label={@filter["text"] || humanize(@filter["id"])}
           options={@options}
+          value={@option_value}
           prompt="Select..."
         />
         <input
           type="number"
           name={build_input_name(@group_id, @filter["id"], "min")}
+          value={@min_value}
           placeholder="Min"
           class="py-1 px-2 bg-base-300"
         />
         <input
           type="number"
           name={build_input_name(@group_id, @filter["id"], "max")}
+          value={@max_value}
           placeholder="Max"
           class="py-1 px-2 bg-base-300"
         />
@@ -88,6 +103,11 @@ defmodule PoeProfitWeb.FiltersComponent do
 
   # Pattern match: minMax range inputs only
   defp filter_input(assigns) when is_map_key(assigns.filter, "minMax") do
+    assigns =
+      assigns
+      |> assign(:min_value, get_filter_value(assigns.form, assigns.group_id, assigns.filter["id"], "min"))
+      |> assign(:max_value, get_filter_value(assigns.form, assigns.group_id, assigns.filter["id"], "max"))
+
     ~H"""
     <div class={filter_class(@filter)}>
       <div class="grid grid-cols-[auto_75px_75px] w-full items-end p-1 gap-2">
@@ -97,12 +117,14 @@ defmodule PoeProfitWeb.FiltersComponent do
         <input
           type="number"
           name={build_input_name(@group_id, @filter["id"], "min")}
+          value={@min_value}
           placeholder="Min"
           class="py-1 px-2 bg-base-300"
         />
         <input
           type="number"
           name={build_input_name(@group_id, @filter["id"], "max")}
+          value={@max_value}
           placeholder="Max"
           class="py-1 px-2 bg-base-300"
         />
@@ -116,7 +138,11 @@ defmodule PoeProfitWeb.FiltersComponent do
     raw_options = get_in(assigns.filter, ["option", "options"]) || []
     # Convert API options to {label, value} tuples, filtering out disabled string headers
     options = transform_options(raw_options)
-    assigns = assign(assigns, :options, options)
+
+    assigns =
+      assigns
+      |> assign(:options, options)
+      |> assign(:option_value, get_filter_value(assigns.form, assigns.group_id, assigns.filter["id"], "option"))
 
     ~H"""
     <div class={filter_class(@filter)}>
@@ -126,7 +152,7 @@ defmodule PoeProfitWeb.FiltersComponent do
         name={build_input_name(@group_id, @filter["id"], "option")}
         label={@filter["text"] || humanize(@filter["id"])}
         options={@options}
-        prompt="Select..."
+        value={@option_value}
       />
     </div>
     """
@@ -134,6 +160,9 @@ defmodule PoeProfitWeb.FiltersComponent do
 
   # Pattern match: text input (fallback)
   defp filter_input(assigns) do
+    assigns =
+      assign(assigns, :text_value, get_filter_value(assigns.form, assigns.group_id, assigns.filter["id"], "value"))
+
     ~H"""
     <div class={filter_class(@filter)}>
       <label class="block text-sm font-medium mb-1">
@@ -142,6 +171,7 @@ defmodule PoeProfitWeb.FiltersComponent do
       <input
         type="text"
         name={build_input_name(@group_id, @filter["id"], "value")}
+        value={@text_value}
         class="w-full py-1 px-2 bg-base-300"
       />
     </div>
@@ -151,6 +181,11 @@ defmodule PoeProfitWeb.FiltersComponent do
   # Builds nested input name: filters[group_id][filters][filter_id][key]
   defp build_input_name(group_id, filter_id, key) do
     "filters[#{group_id}][filters][#{filter_id}][#{key}]"
+  end
+
+  # Gets the value for a specific filter field from form params
+  defp get_filter_value(form, group_id, filter_id, key) do
+    get_in(form.params, ["filters", group_id, "filters", filter_id, key])
   end
 
   # Builds unique input ID for filter

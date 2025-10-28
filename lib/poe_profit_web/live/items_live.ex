@@ -14,8 +14,6 @@ defmodule PoeProfitWeb.ItemsLive do
     socket =
       socket
       |> assign(:filters_config, filters_config)
-      |> assign(:filter_params, %{})
-      |> assign(:form, to_form(%{}, as: "filters"))
       |> assign(:loading, false)
       |> assign(:query_id, nil)
       |> stream_configure(:items, dom_id: & &1["id"])
@@ -24,10 +22,24 @@ defmodule PoeProfitWeb.ItemsLive do
     {:ok, socket}
   end
 
-  def handle_event("filter_change", params, socket) do
-    cleaned_params = FilterParamsHelper.clean_params(params) || %{}
+  def handle_params(params, _uri, socket) do
+    # Extract and clean filter params from URL
+    filter_params = FilterParamsHelper.clean_params(params) || %{}
 
-    {:noreply, assign(socket, :filter_params, cleaned_params)}
+    socket =
+      socket
+      |> assign(:filter_params, filter_params)
+      |> assign(:form, to_form(filter_params, as: "filters"))
+
+    {:noreply, socket}
+  end
+
+  def handle_event("filter_change", params, socket) do
+    # Extract just the filter data, excluding Phoenix form tracking fields like _target
+    filter_data = Map.get(params, "filters", %{})
+    cleaned_params = FilterParamsHelper.clean_params(%{"filters" => filter_data}) || %{}
+
+    {:noreply, push_patch(socket, to: ~p"/items?#{cleaned_params}")}
   end
 
   def handle_event("search", params, socket) do
@@ -38,7 +50,6 @@ defmodule PoeProfitWeb.ItemsLive do
     with {:ok, %{"id" => query_id, "result" => item_ids}} <- Trade.search(cleaned_params),
          item_ids <- Enum.take(item_ids, 10),
          {:ok, items} <- Trade.get_items(item_ids, query_id) do
-      IO.inspect(items, label: "================== ITEMS\n")
       {:noreply, socket |> assign(:query_id, query_id) |> stream(:items, items, reset: true)}
     end
   end
@@ -57,7 +68,7 @@ defmodule PoeProfitWeb.ItemsLive do
       <h1 class="text-2xl font-bold mb-4">Item Search</h1>
 
       <.form for={@form} phx-change="filter_change" phx-submit="search">
-        <FiltersComponent.filters filters_data={@filters_config} />
+        <FiltersComponent.filters filters_data={@filters_config} form={@form} />
 
         <.button type="submit">Search Items</.button>
       </.form>
