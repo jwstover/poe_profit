@@ -18,6 +18,8 @@ defmodule PoeProfitWeb.ItemsLive do
       |> assign(:form, to_form(%{}, as: "filters"))
       |> assign(:loading, false)
       |> assign(:query_id, nil)
+      |> stream_configure(:items, dom_id: & &1["id"])
+      |> stream(:items, [])
 
     {:ok, socket}
   end
@@ -36,8 +38,17 @@ defmodule PoeProfitWeb.ItemsLive do
     with {:ok, %{"id" => query_id, "result" => item_ids}} <- Trade.search(cleaned_params),
          item_ids <- Enum.take(item_ids, 10),
          {:ok, items} <- Trade.get_items(item_ids, query_id) do
-      {:noreply, socket |> assign(:query_id, query_id)}
+      IO.inspect(items, label: "================== ITEMS\n")
+      {:noreply, socket |> assign(:query_id, query_id) |> stream(:items, items, reset: true)}
     end
+  end
+
+  defp format_mod(mod_string) do
+    # Replace [InternalName|Display Text] with Display Text, or [Value] with Value
+    Regex.replace(~r/\[([^|\]]+)(?:\|([^\]]+))?\]/, mod_string, fn
+      _, first, "" -> first
+      _, _internal, display -> display
+    end)
   end
 
   def render(assigns) do
@@ -52,9 +63,29 @@ defmodule PoeProfitWeb.ItemsLive do
       </.form>
 
       <div :if={@query_id}>
-        <a href={"https://pathofexile.com/trade2/search/poe2/Rise%20of%20the%20Abyssal/#{@query_id}"} target="_blank">
+        <a
+          href={"https://pathofexile.com/trade2/search/poe2/Rise%20of%20the%20Abyssal/#{@query_id}"}
+          target="_blank"
+        >
           <.button variant="primary">View on Trade Site</.button>
         </a>
+      </div>
+
+      <div>
+        <div
+          :for={{dom_id, item} <- @streams.items}
+          id={dom_id}
+          class="grid grid-cols-[100px_1fr_100px]"
+        >
+          <div><img src={item["item"]["icon"]} /></div>
+          <div>
+            <h3>{item["item"]["name"]} {item["item"]["typeLine"]}</h3>
+            <ul>
+              <li :for={mod <- item["item"]["explicitMods"] || []}>{format_mod(mod)}</li>
+            </ul>
+          </div>
+          <div></div>
+        </div>
       </div>
     </div>
     """
