@@ -27,8 +27,9 @@ defmodule PoeProfit.PoeApi.Trade do
 
   def get_items(item_ids, query_id, realm \\ "poe2") do
     query = %{query: query_id, realm: realm}
-    url = Path.join(@base_url, "/fetch/#{Enum.join(item_ids, ",")}?#{URI.encode_query(query)}")
-    |> IO.inspect(label: "================== URL\n")
+
+    url =
+      Path.join(@base_url, "/fetch/#{Enum.join(item_ids, ",")}?#{URI.encode_query(query)}")
 
     Req.get(url)
     |> case do

@@ -66,9 +66,18 @@ defmodule PoeProfitWeb.FiltersComponent do
     assigns =
       assigns
       |> assign(:options, options)
-      |> assign(:option_value, get_filter_value(assigns.form, assigns.group_id, assigns.filter["id"], "option"))
-      |> assign(:min_value, get_filter_value(assigns.form, assigns.group_id, assigns.filter["id"], "min"))
-      |> assign(:max_value, get_filter_value(assigns.form, assigns.group_id, assigns.filter["id"], "max"))
+      |> assign(
+        :option_value,
+        get_filter_value(assigns.form, assigns.group_id, assigns.filter["id"], "option")
+      )
+      |> assign(
+        :min_value,
+        get_filter_value(assigns.form, assigns.group_id, assigns.filter["id"], "min")
+      )
+      |> assign(
+        :max_value,
+        get_filter_value(assigns.form, assigns.group_id, assigns.filter["id"], "max")
+      )
 
     ~H"""
     <div class={filter_class(@filter)}>
@@ -105,8 +114,14 @@ defmodule PoeProfitWeb.FiltersComponent do
   defp filter_input(assigns) when is_map_key(assigns.filter, "minMax") do
     assigns =
       assigns
-      |> assign(:min_value, get_filter_value(assigns.form, assigns.group_id, assigns.filter["id"], "min"))
-      |> assign(:max_value, get_filter_value(assigns.form, assigns.group_id, assigns.filter["id"], "max"))
+      |> assign(
+        :min_value,
+        get_filter_value(assigns.form, assigns.group_id, assigns.filter["id"], "min")
+      )
+      |> assign(
+        :max_value,
+        get_filter_value(assigns.form, assigns.group_id, assigns.filter["id"], "max")
+      )
 
     ~H"""
     <div class={filter_class(@filter)}>
@@ -142,7 +157,10 @@ defmodule PoeProfitWeb.FiltersComponent do
     assigns =
       assigns
       |> assign(:options, options)
-      |> assign(:option_value, get_filter_value(assigns.form, assigns.group_id, assigns.filter["id"], "option"))
+      |> assign(
+        :option_value,
+        get_filter_value(assigns.form, assigns.group_id, assigns.filter["id"], "option")
+      )
 
     ~H"""
     <div class={filter_class(@filter)}>
@@ -161,7 +179,11 @@ defmodule PoeProfitWeb.FiltersComponent do
   # Pattern match: text input (fallback)
   defp filter_input(assigns) do
     assigns =
-      assign(assigns, :text_value, get_filter_value(assigns.form, assigns.group_id, assigns.filter["id"], "value"))
+      assign(
+        assigns,
+        :text_value,
+        get_filter_value(assigns.form, assigns.group_id, assigns.filter["id"], "value")
+      )
 
     ~H"""
     <div class={filter_class(@filter)}>

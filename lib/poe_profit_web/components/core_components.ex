@@ -254,7 +254,7 @@ defmodule PoeProfitWeb.CoreComponents do
     selected_label =
       case Enum.find(assigns.options, fn opt -> selected_option?(opt, assigns.value) end) do
         {label, _value} -> label
-        nil -> assigns.prompt || (assigns.options |> hd() |> elem(0))
+        nil -> assigns.prompt || assigns.options |> hd() |> elem(0)
       end
 
     assigns = assign(assigns, :selected_label, selected_label)
@@ -276,8 +276,8 @@ defmodule PoeProfitWeb.CoreComponents do
             value={@value}
             data-hidden-input
           />
-
-          <!-- Display button that shows the selected value -->
+          
+    <!-- Display button that shows the selected value -->
           <button
             type="button"
             data-display-button
@@ -291,8 +291,8 @@ defmodule PoeProfitWeb.CoreComponents do
             </span>
             <.icon name="hero-chevron-down" class="size-4 ml-2" />
           </button>
-
-          <!-- Dropdown container (hidden by default) -->
+          
+    <!-- Dropdown container (hidden by default) -->
           <div
             data-dropdown
             class="hidden absolute z-10 w-full mt-1 bg-base-100 border border-base-300 rounded-lg shadow-lg"
@@ -306,8 +306,8 @@ defmodule PoeProfitWeb.CoreComponents do
                 class="w-full input input-sm"
               />
             </div>
-
-            <!-- Options list -->
+            
+    <!-- Options list -->
             <ul
               data-options-list
               class="max-h-60 overflow-y-auto"
@@ -365,6 +365,7 @@ defmodule PoeProfitWeb.CoreComponents do
   # Helper to check if an option is selected in type_ahead_select
   defp selected_option?(_option, nil), do: false
   defp selected_option?({_label, nil}, _value), do: false
+
   defp selected_option?({_label, option_value}, value) do
     to_string(option_value) == to_string(value)
   end
