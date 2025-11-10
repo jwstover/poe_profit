@@ -23,9 +23,10 @@ defmodule PoeProfit.PoeApi.Trade do
     end
   end
 
+  def get_items(item_ids, query_id, realm \\ "poe2")
   def get_items([], _, _), do: {:ok, []}
 
-  def get_items(item_ids, query_id, realm \\ "poe2") do
+  def get_items(item_ids, query_id, realm) do
     query = %{query: query_id, realm: realm}
 
     url =
