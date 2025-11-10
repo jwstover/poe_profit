@@ -50,6 +50,8 @@ defmodule PoeProfitWeb.ItemsLive do
     with {:ok, %{"id" => query_id, "result" => item_ids}} <- Trade.search(cleaned_params),
          item_ids <- Enum.take(item_ids, 10),
          {:ok, items} <- Trade.get_items(item_ids, query_id) do
+      items |> PoeProfit.Calculations.compute_item_average()
+      |> IO.inspect(label: "================== \n")
       {:noreply, socket |> assign(:query_id, query_id) |> stream(:items, items, reset: true)}
     end
   end

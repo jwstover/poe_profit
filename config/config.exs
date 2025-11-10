@@ -62,7 +62,7 @@ config :spark,
 config :poe_profit,
   ecto_repos: [PoeProfit.Repo],
   generators: [timestamp_type: :utc_datetime],
-  ash_domains: [PoeProfit.ItemStats, PoeProfit.Accounts]
+  ash_domains: [PoeProfit.Currencies, PoeProfit.ItemStats, PoeProfit.Accounts]
 
 # Configures the endpoint
 config :poe_profit, PoeProfitWeb.Endpoint,
