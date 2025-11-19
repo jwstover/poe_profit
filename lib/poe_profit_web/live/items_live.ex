@@ -50,6 +50,9 @@ defmodule PoeProfitWeb.ItemsLive do
     with {:ok, %{"id" => query_id, "result" => item_ids}} <- Trade.search(cleaned_params),
          item_ids <- Enum.take(item_ids, 10),
          {:ok, items} <- Trade.get_items(item_ids, query_id) do
+         stats = calculate_statistics(items)
+         IO.inspect(items)
+         IO.inspect(stats)
       {:noreply, socket |> assign(:query_id, query_id) |> stream(:items, items, reset: true)}
     end
   end
@@ -60,6 +63,41 @@ defmodule PoeProfitWeb.ItemsLive do
       _, first, "" -> first
       _, _internal, display -> display
     end)
+  end
+
+  defp calculate_median(prices) do
+    sorted = Enum.sort(prices)
+    len = length(sorted)
+    mid = div(len, 2)
+
+    if rem(len, 2) == 0 do
+      Float.round((Enum.at(sorted, mid - 1) + Enum.at(sorted, mid)) / 2, 2)
+    else
+      Enum.at(sorted, mid)
+    end
+  end
+
+  defp calculate_statistics(items) do
+    # Extract prices (handle different currencyu types and missing prices)
+    prices = 
+      items
+      |> Enum.map(fn item ->
+        get_in(item, ["listing", "price", "amount"])
+      end)
+      |> Enum.reject(&is_nil/1)
+
+    item_count = length(items)
+
+    %{
+      total_items: item_count,
+      items_with_price: length(prices),
+      items_without_price: item_count - length(prices),
+      min_price: (if prices != [], do: Enum.min(prices), else: nil),
+      max_price: (if prices != [], do: Enum.max(prices), else: nil),
+      avg_price: (if prices != [], do: Float.round(Enum.sum(prices) / length(prices), 2),
+    else: nil),
+      median_price: (if prices != [], do: calculate_median(prices), else: nil)
+    }
   end
 
   def render(assigns) do
