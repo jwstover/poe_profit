@@ -35,4 +35,10 @@ defmodule PoeProfit.Currencies.Currency do
   identities do
     identity :poe_id, [:poe_id, :league]
   end
+
+  relationships do
+    has_many :craft_currency_inputs, PoeProfit.Crafting.CraftCurrencyInput do
+      public? true
+    end
+  end
 end
