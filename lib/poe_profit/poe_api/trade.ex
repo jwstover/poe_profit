@@ -8,7 +8,7 @@ defmodule PoeProfit.PoeApi.Trade do
   @base_url "https://www.pathofexile.com/api/trade2"
 
   def search(params) do
-    url = Path.join(@base_url, "/search/poe2/Rise%20of%20the%20Abyssal")
+    url = Path.join(@base_url, "/search/poe2/Standard")
     body = %{query: params, sort: %{price: "asc"}} |> Jason.encode!()
     headers = [{"content-type", "application/json"}]
 
